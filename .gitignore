@@ -1,0 +1,5 @@
+*/UNet/*
+*/MonaiUNet/*
+*.nii.gz
+*.zip
+*/__pycache__/*
