@@ -154,13 +154,23 @@ def get_loader(
         shuffle=True,
         num_workers=num_workers,
         pin_memory=True,
-        prefetch_factor=4,
+        prefetch_factor=10,
     )
     val_loader = DataLoader(
-        val_set, batch_size=1, shuffle=False, num_workers=num_workers
+        val_set,
+        batch_size=1,
+        shuffle=False,
+        num_workers=num_workers,
+        pin_memory=True,
+        prefetch_factor=10,
     )
     test_loader = DataLoader(
-        test_set, batch_size=1, shuffle=False, num_workers=num_workers
+        test_set,
+        batch_size=1,
+        shuffle=False,
+        num_workers=num_workers,
+        pin_memory=True,
+        prefetch_factor=10,
     )
 
     return train_loader, val_loader, test_loader

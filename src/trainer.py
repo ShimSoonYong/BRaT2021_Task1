@@ -1,10 +1,21 @@
 import torch
 import numpy as np
+from torch import nn
 from pathlib import Path
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
+from torch.utils.checkpoint import checkpoint
 from torch.cuda.amp import GradScaler, autocast
 from monai.metrics import DiceMetric, HausdorffDistanceMetric, MeanIoU
+
+
+class CheckpointModel(nn.Module):
+    def __init__(self, model: nn.Module):
+        super().__init__()
+        self.model = model
+
+    def forward(self, x):
+        return checkpoint(self.model, x, use_reentrant=False)
 
 
 class Trainer:
@@ -29,7 +40,7 @@ class Trainer:
         target_batch_size: int = 1,
     ):
 
-        self.model = model.to(device)
+        self.model = CheckpointModel(model).to(device)
         self.model.compile()
         self.model_name = model_name
         self.train_loader = train_loader
@@ -114,9 +125,6 @@ class Trainer:
                     self.optimizer.step()
                 self.optimizer.zero_grad()
 
-            del images, labels, loss, outputs
-            torch.cuda.empty_cache()
-
         return epoch_loss / num_batches
 
     def val(self) -> dict:
@@ -134,15 +142,10 @@ class Trainer:
                     outputs = self.model(images)
 
                 preds = (torch.sigmoid(outputs) > 0.5).float()
-                preds = preds.cpu()
-                labels = labels.cpu()
 
                 self.dice_metric(y_pred=preds, y=labels)
                 self.hausdorff_metric(y_pred=preds, y=labels)
                 self.iou_metric(y_pred=preds, y=labels)
-
-                del images, labels, outputs, preds
-                torch.cuda.empty_cache()
 
         val_dice = self.dice_metric.aggregate().item()
         val_hd = self.hausdorff_metric.aggregate().item()
@@ -179,14 +182,10 @@ class Trainer:
                     outputs = self.model(images)
 
                 preds = (torch.sigmoid(outputs) > 0.5).float()
-                preds = preds.cpu()
-                labels = labels.cpu()
 
                 self.dice_metric(y_pred=preds, y=labels)
                 self.hausdorff_metric(y_pred=preds, y=labels)
                 self.iou_metric(y_pred=preds, y=labels)
-                del images, labels, outputs, preds
-                torch.cuda.empty_cache()
 
         test_results = {
             "test_mean_dice": self.dice_metric.aggregate().item(),

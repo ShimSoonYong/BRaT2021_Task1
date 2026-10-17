@@ -119,13 +119,14 @@ def main(args):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     trainer = Trainer(
         model=model,
-        model_name=args.model,
+        model_name=args.model + "_" + args.augment,
         train_loader=train_loader,
         val_loader=val_loader,
         optimizer=optimizer,
         loss_function=loss_function,
         test_loader=test_loader,
         target_batch_size=args.batch_size,  # Trainer figures out accum_steps internally
+        device=device,
     )
 
     # 6. Execute Training Lifecycle
