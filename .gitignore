@@ -6,3 +6,5 @@
 *.pyc
 .git_token
 *.png
+*.pth
+*.txt

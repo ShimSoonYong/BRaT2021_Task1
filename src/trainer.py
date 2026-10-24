@@ -42,6 +42,7 @@ class Trainer:
 
         self.model = CheckpointModel(model).to(device)
         self.model.compile()
+        print(f"Training on {device}")
         self.model_name = model_name
         self.train_loader = train_loader
         self.val_loader = val_loader
